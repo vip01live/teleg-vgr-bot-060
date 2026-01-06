@@ -1,8 +1,12 @@
 import os
+import json
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import Application, ContextTypes, CommandHandler, MessageHandler, filters
 
-TOKEN = os.environ["TOKEN"]
+TOKEN = os.environ.get("TOKEN")
+
+if not TOKEN:
+    raise ValueError("TOKEN not found in environment!")
 
 application = Application.builder().token(TOKEN).build()
 
@@ -28,7 +32,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     
     responses = {
-        "Матч! ТВ": "https://example.com/match-tv",
+        "Матч! ТВ": "https://example.com/match-tv (փոխիր իրականով)",
         "Матч! Футбол 1": "https://example.com/football1",
         "Матч! Футбол 2": "https://example.com/football2",
         "Матч! Футбол 3": "https://example.com/football3",
@@ -46,10 +50,18 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 application.add_handler(CommandHandler("start", start))
 application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-async def webhook(request):
-    update = Update.de_json(await request.get_json(force=True), application.bot)
-    await application.process_update(update)
-    return "ok"
-
-# Vercel-ի համար պարտադիր export
-handler = webhook
+async def handler(event, context):
+    try:
+        body = json.loads(event["body"])
+        update = Update.de_json(body, application.bot)
+        await application.process_update(update)
+        return {
+            "statusCode": 200,
+            "body": "ok"
+        }
+    except Exception as e:
+        print("Error:", e)
+        return {
+            "statusCode": 500,
+            "body": str(e)
+        }
