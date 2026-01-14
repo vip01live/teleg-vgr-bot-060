@@ -1,7 +1,8 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
-BOT_TOKEN = "8583042031:AAG9b8oALRGGcnd-Xih63NRYLRuCe8AizDw"
+import os
+BOT_TOKEN = os.getenv("8583042031:AAG9b8oALRGGcnd-Xih63NRYLRuCe8AizDw")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     first_name = update.effective_user.first_name
